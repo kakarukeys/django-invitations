@@ -60,7 +60,7 @@ class SendJSONInvite(LoginRequiredMixin, View):
                 try:
                     validate_email(invitee)
                     CleanEmailMixin().validate_invitation(invitee)
-                    invite = Invitation.create(invitee)
+                    invite = Invitation.create(invitee, inviter=request.user)
                 except(ValueError, KeyError):
                     pass
                 except(ValidationError):
