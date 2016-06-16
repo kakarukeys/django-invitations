@@ -18,6 +18,27 @@ from .app_settings import app_settings
 from .adapters import get_invitations_adapter
 
 
+def mark_invitation_accepted(invitation, view_class, request):
+    """ mark an invitation as accepted, trigger the signal and send out notiff message 
+        (to be called after the action following invitation link is completed)
+
+        view_class, request: information for signal, to be gotten from the current view
+    """
+    invitation.accepted = True
+    invitation.save()
+
+    signals.invite_accepted.send(
+        sender=view_class, request=request, email=invitation.email
+    )
+
+    get_invitations_adapter().add_message(
+        request,
+        messages.SUCCESS,
+        'invitations/messages/invite_accepted.txt',
+        {'email': invitation.email}
+    )
+
+
 class SendInvite(LoginRequiredMixin, FormView):
     template_name = 'invitations/forms/_invite.html'
     form_class = InviteForm
@@ -138,21 +159,8 @@ class AcceptInvite(SingleObjectMixin, View):
             # Redirect to sign-up since they might be able to register anyway.
             return redirect(app_settings.SIGNUP_REDIRECT)
 
-        # The invitation is valid! Accept it and let them finish the sign-up.
-        invitation.accepted = True
-        invitation.save()
-        get_invitations_adapter().stash_verified_email(
-            self.request, invitation.email)
-
-        signals.invite_accepted.send(sender=self.__class__,
-                                     request=self.request,
-                                     email=invitation.email)
-
-        get_invitations_adapter().add_message(
-            self.request,
-            messages.SUCCESS,
-            'invitations/messages/invite_accepted.txt',
-            {'email': invitation.email})
+        # The invitation is valid! accept the email, let him finish the sign-up.
+        get_invitations_adapter().stash_verified_email(self.request, invitation.email)
 
         return redirect(app_settings.SIGNUP_REDIRECT)
 
