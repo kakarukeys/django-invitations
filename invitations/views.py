@@ -18,15 +18,14 @@ from .app_settings import app_settings
 from .adapters import get_invitations_adapter
 
 
-def mark_invitation_accepted(invitation, view_class, request):
-    """ mark an invitation as accepted, trigger the signal and send out notiff message 
-        (to be called after the action following invitation link is completed)
+def handle_invitation_acceptance(invitation, view_class, request):
+    """ trigger the signal and send out notiff message
+
+        (to be called after the action following invitation link is completed 
+         and after the invitation is marked as accepted)
 
         view_class, request: information for signal, to be gotten from the current view
     """
-    invitation.accepted = True
-    invitation.save()
-
     signals.invite_accepted.send(
         sender=view_class, request=request, email=invitation.email
     )
