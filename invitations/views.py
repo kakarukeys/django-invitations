@@ -135,7 +135,7 @@ class AcceptInvite(SingleObjectMixin, View):
                 self.request,
                 messages.ERROR,
                 'invitations/messages/invite_invalid.txt')
-            return redirect(app_settings.LOGIN_REDIRECT)
+            return redirect(app_settings.EXPIRED_REDIRECT)
 
         # The invitation was previously accepted, redirect to the login
         # view.
@@ -145,7 +145,7 @@ class AcceptInvite(SingleObjectMixin, View):
                 messages.ERROR,
                 'invitations/messages/invite_already_accepted.txt',
                 {'email': invitation.email})
-            # Redirect to login since there's hopefully an account already.
+            # Redirect to login since there's an account already.
             return redirect(app_settings.LOGIN_REDIRECT)
 
         # The key was expired.
@@ -155,8 +155,7 @@ class AcceptInvite(SingleObjectMixin, View):
                 messages.ERROR,
                 'invitations/messages/invite_expired.txt',
                 {'email': invitation.email})
-            # Redirect to sign-up since they might be able to register anyway.
-            return redirect(app_settings.SIGNUP_REDIRECT)
+            return redirect(app_settings.EXPIRED_REDIRECT)
 
         # The invitation is valid! accept the email, let him finish the sign-up.
         get_invitations_adapter().stash_verified_email(self.request, invitation.email)
